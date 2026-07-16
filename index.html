@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartPark — AI Campus Parking Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:   #0D1B2A;
+    --mid:    #152535;
+    --card:   #1A2E45;
+    --cyan:   #00B4D8;
+    --teal:   #0077A8;
+    --mint:   #02C39A;
+    --amber:  #F4A300;
+    --coral:  #E05C3A;
+    --purple: #7F77DD;
+    --white:  #FFFFFF;
+    --slate:  #B0C4D8;
+    --dim:    #6B8CAE;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--navy);
+    color: var(--white);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(13,27,42,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(0,180,216,0.15);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 2.5rem; height: 64px;
+  }
+  .nav-logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700; font-size: 1.35rem; color: var(--cyan);
+    letter-spacing: -0.02em; text-decoration: none;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .nav-logo span { color: var(--white); }
+  .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--mint); display: inline-block; }
+  .nav-tabs {
+    display: flex; gap: 0.25rem; list-style: none;
+  }
+  .nav-tabs button {
+    background: none; border: none; cursor: pointer;
+    font-family: 'Inter', sans-serif; font-size: 0.875rem; font-weight: 500;
+    color: var(--slate); padding: 0.5rem 1rem; border-radius: 6px;
+    transition: color 0.2s, background 0.2s;
+  }
+  .nav-tabs button:hover { color: var(--white); background: rgba(255,255,255,0.05); }
+  .nav-tabs button.active { color: var(--cyan); background: rgba(0,180,216,0.1); }
+
+  /* ── SECTIONS ── */
+  section { display: none; padding-top: 64px; }
+  section.active { display: block; }
+  .section-inner { max-width: 1100px; margin: 0 auto; padding: 4rem 2rem; }
+
+  /* ── HERO ── */
+  #hero {
+    min-height: 100vh; display: flex; flex-direction: column;
+    justify-content: center; padding-top: 64px; position: relative; overflow: hidden;
+  }
+  .hero-inner {
+    max-width: 1100px; margin: 0 auto; padding: 4rem 2rem;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center;
+  }
+  .hero-eyebrow {
+    font-size: 0.75rem; font-weight: 600; letter-spacing: 0.15em;
+    text-transform: uppercase; color: var(--cyan); margin-bottom: 1rem;
+  }
+  .hero-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(2.5rem, 5vw, 3.8rem);
+    font-weight: 700; line-height: 1.05; letter-spacing: -0.03em;
+    margin-bottom: 1.5rem;
+  }
+  .hero-title .accent { color: var(--cyan); }
+  .hero-sub {
+    font-size: 1.1rem; color: var(--slate); line-height: 1.7;
+    max-width: 480px; margin-bottom: 2.5rem;
+  }
+  .hero-cta {
+    display: flex; gap: 1rem; flex-wrap: wrap;
+  }
+  .btn-primary {
+    background: var(--cyan); color: var(--navy);
+    font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.9rem;
+    padding: 0.75rem 1.75rem; border-radius: 8px; border: none; cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+  }
+  .btn-primary:hover { background: #33c6e8; transform: translateY(-1px); }
+  .btn-outline {
+    background: transparent; color: var(--cyan);
+    font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.9rem;
+    padding: 0.75rem 1.75rem; border-radius: 8px;
+    border: 1.5px solid rgba(0,180,216,0.4); cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .btn-outline:hover { border-color: var(--cyan); background: rgba(0,180,216,0.07); }
+
+  /* ── PARKING LOT ANIMATION ── */
+  .lot-wrap {
+    background: var(--mid); border-radius: 16px;
+    padding: 1.5rem; border: 1px solid rgba(0,180,216,0.12);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+    position: relative;
+  }
+  .lot-label {
+    font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--dim); margin-bottom: 1rem;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .lot-status { display: flex; align-items: center; gap: 0.4rem; }
+  .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--mint); animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  .parking-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .parking-row {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 5px;
+  }
+  .parking-aisle { height: 100px; }
+  .spot {
+    aspect-ratio: 1/1.6; border-radius: 4px;
+    transition: background 0.4s, box-shadow 0.4s;
+    position: relative;
+  }
+  .spot.open { background: rgba(2,195,154,0.55); border: 1px solid rgba(2,195,154,0.85); }
+  .spot.taken { background: rgba(224,92,58,0.55); border: 1px solid rgba(224,92,58,0.8); }
+  .spot.selected { background: rgba(0,180,216,0.7); border: 1.5px solid var(--cyan); box-shadow: 0 0 10px rgba(0,180,216,0.6); }
+  .spot.scanning { animation: scanflash 0.6s ease; }
+  @keyframes scanflash { 0%{background:rgba(0,180,216,0.6)} 100%{background:rgba(2,195,154,0.25)} }
+
+  .lot-legend {
+    display: flex; gap: 1.2rem; margin-top: 1rem; flex-wrap: wrap;
+    font-size: 0.75rem; color: var(--dim);
+  }
+  .legend-item { display: flex; align-items: center; gap: 0.4rem; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+  .ld-open { background: rgba(2,195,154,0.6); border: 1px solid rgba(2,195,154,0.8); }
+  .ld-taken { background: rgba(224,92,58,0.5); border: 1px solid rgba(224,92,58,0.7); }
+  .ld-you { background: rgba(0,180,216,0.6); border: 1.5px solid var(--cyan); }
+
+  .lot-stats {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-top: 1rem;
+  }
+  .lot-stat {
+    background: rgba(255,255,255,0.04); border-radius: 8px; padding: 0.7rem;
+    text-align: center;
+  }
+  .lot-stat-val { font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; font-weight: 700; }
+  .lot-stat-lbl { font-size: 0.7rem; color: var(--dim); margin-top: 0.2rem; }
+  .val-open { color: var(--mint); }
+  .val-taken { color: var(--coral); }
+  .val-total { color: var(--slate); }
+
+  /* ── SECTION HEADERS ── */
+  .sec-eyebrow {
+    font-size: 0.75rem; font-weight: 600; letter-spacing: 0.15em;
+    text-transform: uppercase; color: var(--cyan); margin-bottom: 0.75rem;
+  }
+  .sec-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+    font-weight: 700; letter-spacing: -0.03em; line-height: 1.1;
+    margin-bottom: 1rem;
+  }
+  .sec-lead { color: var(--slate); font-size: 1.05rem; line-height: 1.7; max-width: 680px; margin-bottom: 3rem; }
+
+  /* ── CARDS ── */
+  .card-grid { display: grid; gap: 1.25rem; }
+  .card-grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .card-grid-2 { grid-template-columns: repeat(2, 1fr); }
+  .card {
+    background: var(--card); border-radius: 12px; padding: 1.75rem;
+    border: 1px solid rgba(255,255,255,0.06);
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .card:hover { border-color: rgba(0,180,216,0.25); transform: translateY(-2px); }
+  .card-accent { width: 36px; height: 4px; border-radius: 2px; margin-bottom: 1.2rem; }
+  .card-title { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 1.05rem; margin-bottom: 0.6rem; }
+  .card-body { font-size: 0.9rem; color: var(--slate); line-height: 1.65; }
+
+  /* ── PROBLEM ── */
+  .problem-hook {
+    background: linear-gradient(135deg, rgba(224,92,58,0.15), rgba(224,92,58,0.05));
+    border: 1px solid rgba(224,92,58,0.3); border-radius: 12px;
+    padding: 1.5rem 2rem; margin-bottom: 3rem;
+    font-size: 1.1rem; line-height: 1.7; color: var(--white);
+    font-style: italic;
+  }
+  .problem-hook strong { color: var(--coral); font-style: normal; }
+
+  .stat-row {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin-bottom: 3rem;
+  }
+  .stat-card {
+    background: var(--card); border-radius: 12px; padding: 1.5rem;
+    border: 1px solid rgba(255,255,255,0.06); text-align: center;
+  }
+  .stat-num {
+    font-family: 'Space Grotesk', sans-serif; font-size: 2.5rem; font-weight: 700;
+    line-height: 1; margin-bottom: 0.4rem;
+  }
+  .stat-label { font-size: 0.85rem; color: var(--slate); }
+  .stat-source { font-size: 0.72rem; color: var(--dim); margin-top: 0.4rem; }
+
+  .five-why {
+    background: var(--card); border-radius: 12px; padding: 2rem;
+    border: 1px solid rgba(255,255,255,0.06); margin-top: 2rem;
+  }
+  .five-why h3 {
+    font-family: 'Space Grotesk', sans-serif; font-size: 1rem; font-weight: 600;
+    color: var(--cyan); margin-bottom: 1.5rem;
+  }
+  .why-chain { display: flex; flex-direction: column; gap: 0; }
+  .why-step {
+    display: grid; grid-template-columns: 80px 1fr; gap: 1rem;
+    align-items: start; position: relative;
+  }
+  .why-step:not(:last-child)::after {
+    content: ''; position: absolute; left: 38px; top: 32px;
+    width: 2px; height: calc(100% + 0px); background: rgba(0,180,216,0.2);
+  }
+  .why-num {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: rgba(0,180,216,0.15); border: 1.5px solid rgba(0,180,216,0.4);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Space Grotesk', sans-serif; font-size: 0.8rem; font-weight: 700;
+    color: var(--cyan); flex-shrink: 0; margin-top: 0.1rem;
+  }
+  .why-content { padding-bottom: 1.5rem; }
+  .why-q { font-size: 0.8rem; color: var(--dim); margin-bottom: 0.3rem; }
+  .why-a { font-size: 0.92rem; color: var(--white); line-height: 1.5; }
+
+  /* ── SOLUTION ── */
+  .flow-steps {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin-bottom: 3rem;
+    position: relative;
+  }
+  .flow-step {
+    background: var(--card); padding: 1.5rem 1.25rem;
+    border: 1px solid rgba(255,255,255,0.06); text-align: left; position: relative;
+  }
+  .flow-step:first-child { border-radius: 12px 0 0 12px; }
+  .flow-step:last-child  { border-radius: 0 12px 12px 0; }
+  .flow-step:not(:last-child)::after {
+    content: '→'; position: absolute; right: -14px; top: 50%;
+    transform: translateY(-50%); font-size: 1.1rem; color: var(--cyan); z-index: 2;
+  }
+  .flow-n {
+    font-family: 'Space Grotesk', sans-serif; font-size: 1.8rem; font-weight: 700;
+    color: rgba(0,180,216,0.3); line-height: 1; margin-bottom: 0.6rem;
+  }
+  .flow-title { font-family: 'Space Grotesk', sans-serif; font-size: 0.95rem; font-weight: 600; margin-bottom: 0.4rem; }
+  .flow-body { font-size: 0.82rem; color: var(--slate); line-height: 1.55; }
+  .flow-step-top { height: 3px; margin: 0 -1.25rem 1.2rem; background: var(--cyan); }
+
+  .tech-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;
+  }
+  .tech-card {
+    background: var(--card); border-radius: 10px; padding: 1.25rem 1.5rem;
+    border: 1px solid rgba(255,255,255,0.06);
+    display: grid; grid-template-columns: auto 1fr; gap: 1rem; align-items: start;
+  }
+  .tech-badge {
+    background: rgba(0,180,216,0.12); border: 1px solid rgba(0,180,216,0.25);
+    border-radius: 6px; padding: 0.3rem 0.6rem;
+    font-size: 0.72rem; font-weight: 600; color: var(--cyan);
+    white-space: nowrap; letter-spacing: 0.03em;
+  }
+  .tech-name { font-family: 'Space Grotesk', sans-serif; font-size: 0.95rem; font-weight: 600; margin-bottom: 0.3rem; }
+  .tech-desc { font-size: 0.85rem; color: var(--slate); line-height: 1.55; }
+
+  .insight-box {
+    background: linear-gradient(135deg, rgba(127,119,221,0.12), rgba(0,119,168,0.12));
+    border: 1px solid rgba(127,119,221,0.3); border-radius: 12px;
+    padding: 1.5rem 2rem; margin-top: 2rem;
+  }
+  .insight-box h4 { font-family: 'Space Grotesk', sans-serif; font-size: 0.85rem; font-weight: 600; color: var(--purple); margin-bottom: 0.5rem; letter-spacing: 0.05em; text-transform: uppercase; }
+  .insight-box p { font-size: 0.95rem; color: var(--slate); line-height: 1.65; }
+  .insight-box strong { color: var(--white); }
+
+  /* ── DEMO ── */
+  .demo-wrap {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: start;
+  }
+  .phone-frame {
+    background: var(--mid); border-radius: 36px;
+    border: 2px solid rgba(0,180,216,0.2);
+    padding: 1.5rem 1rem; min-height: 580px;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+    position: relative; overflow: hidden;
+  }
+  .phone-notch {
+    width: 90px; height: 24px; background: var(--navy);
+    border-radius: 0 0 14px 14px; margin: -1.5rem auto 1.25rem;
+  }
+  .phone-screen { min-height: 500px; }
+
+  /* app screens */
+  .app-screen { display: none; }
+  .app-screen.active { display: block; }
+
+  .app-header {
+    background: var(--navy); border-radius: 12px; padding: 0.75rem 1rem;
+    margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between;
+  }
+  .app-logo { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1rem; color: var(--cyan); }
+  .app-user { font-size: 0.75rem; color: var(--dim); }
+  .app-zone-badge {
+    background: rgba(0,180,216,0.15); border: 1px solid rgba(0,180,216,0.3);
+    border-radius: 20px; padding: 0.3rem 0.8rem; font-size: 0.78rem;
+    color: var(--cyan); font-weight: 500; margin-bottom: 1rem; display: inline-block;
+  }
+  .app-rec {
+    background: linear-gradient(135deg, rgba(2,195,154,0.15), rgba(0,119,168,0.15));
+    border: 1px solid rgba(2,195,154,0.3); border-radius: 10px;
+    padding: 1rem; margin-bottom: 1rem;
+  }
+  .app-rec-label { font-size: 0.7rem; font-weight: 600; color: var(--mint); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.3rem; }
+  .app-rec-lot { font-family: 'Space Grotesk', sans-serif; font-size: 1.2rem; font-weight: 700; margin-bottom: 0.2rem; }
+  .app-rec-sub { font-size: 0.78rem; color: var(--slate); }
+  .app-mini-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 1rem;
+  }
+  .mini-row {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+  }
+  .mini-aisle { height: 28px; }
+  .mini-spot {
+    aspect-ratio: 1/1.5; border-radius: 3px;
+  }
+  .ms-open { background: rgba(2,195,154,0.55); border: 1px solid rgba(2,195,154,0.85); }
+  .ms-taken { background: rgba(224,92,58,0.55); border: 1px solid rgba(224,92,58,0.8); }
+  .ms-yours { background: rgba(0,180,216,0.7); border: 1.5px solid var(--cyan); box-shadow: 0 0 6px rgba(0,180,216,0.5); }
+  .app-go-btn {
+    width: 100%; background: var(--cyan); color: var(--navy);
+    border: none; border-radius: 10px; padding: 0.85rem;
+    font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1rem;
+    cursor: pointer; transition: background 0.2s; margin-bottom: 0.75rem;
+  }
+  .app-go-btn:hover { background: #33c6e8; }
+  .app-info-row { display: flex; gap: 0.5rem; }
+  .app-info-chip {
+    flex: 1; background: var(--card); border-radius: 8px; padding: 0.6rem;
+    text-align: center; border: 1px solid rgba(255,255,255,0.06);
+  }
+  .chip-val { font-family: 'Space Grotesk', sans-serif; font-size: 1rem; font-weight: 700; }
+  .chip-lbl { font-size: 0.65rem; color: var(--dim); }
+  .cv-open { color: var(--mint); }
+  .cv-time { color: var(--amber); }
+  .cv-walk { color: var(--cyan); }
+
+  .demo-controls { }
+  .demo-controls h3 {
+    font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+  .demo-controls p { color: var(--slate); font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.75rem; }
+  .screen-btns { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 2rem; }
+  .screen-btn {
+    background: var(--card); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px; padding: 1rem 1.25rem; cursor: pointer;
+    display: flex; align-items: center; gap: 1rem; text-align: left;
+    transition: border-color 0.2s, background 0.2s; color: var(--white);
+    font-family: 'Inter', sans-serif;
+  }
+  .screen-btn:hover { border-color: rgba(0,180,216,0.3); }
+  .screen-btn.active { border-color: var(--cyan); background: rgba(0,180,216,0.07); }
+  .screen-btn-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; flex-shrink: 0;
+  }
+  .screen-btn-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.15rem; }
+  .screen-btn-sub { font-size: 0.8rem; color: var(--dim); }
+
+  .demo-features { }
+  .demo-features h4 { font-size: 0.8rem; font-weight: 600; color: var(--dim); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem; }
+  .feature-list { display: flex; flex-direction: column; gap: 0.6rem; }
+  .feature-item { display: flex; align-items: flex-start; gap: 0.75rem; font-size: 0.88rem; color: var(--slate); }
+  .feature-item::before { content: '✓'; color: var(--mint); font-weight: 700; flex-shrink: 0; margin-top: 0.05rem; }
+
+  /* ── COMPARISON ── */
+  .comp-table-wrap { overflow-x: auto; margin-bottom: 2rem; }
+  .comp-table {
+    width: 100%; border-collapse: collapse; min-width: 700px;
+  }
+  .comp-table th {
+    padding: 0.75rem 1rem; font-size: 0.82rem; font-weight: 600;
+    text-align: center; border-bottom: 1px solid rgba(255,255,255,0.08);
+    background: var(--mid);
+  }
+  .comp-table th:first-child { text-align: left; }
+  .comp-table th.sp-col { color: var(--cyan); background: rgba(0,180,216,0.08); }
+  .comp-table td {
+    padding: 0.85rem 1rem; font-size: 0.85rem; text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.04); color: var(--slate);
+  }
+  .comp-table td:first-child { text-align: left; color: var(--white); font-weight: 500; }
+  .comp-table td.sp-col { background: rgba(0,180,216,0.05); }
+  .comp-table tr:last-child td { border-bottom: none; }
+  .comp-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .comp-table tr:hover td.sp-col { background: rgba(0,180,216,0.08); }
+  .yes-badge { display: inline-block; background: rgba(2,195,154,0.2); color: #02C39A; border: 1px solid rgba(2,195,154,0.4); border-radius: 20px; padding: 0.2rem 0.75rem; font-size: 0.78rem; font-weight: 600; }
+  .partial-badge { display: inline-block; background: rgba(244,163,0,0.15); color: #F4A300; border: 1px solid rgba(244,163,0,0.35); border-radius: 20px; padding: 0.2rem 0.75rem; font-size: 0.78rem; font-weight: 600; }
+  .no-badge { display: inline-block; background: rgba(224,92,58,0.12); color: #E05C3A; border: 1px solid rgba(224,92,58,0.3); border-radius: 20px; padding: 0.2rem 0.75rem; font-size: 0.78rem; font-weight: 600; }
+
+  .moat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin-top: 2.5rem; }
+  .moat-card {
+    background: var(--card); border-radius: 12px; padding: 1.5rem;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .moat-icon { font-size: 1.5rem; margin-bottom: 0.75rem; }
+  .moat-title { font-family: 'Space Grotesk', sans-serif; font-size: 0.95rem; font-weight: 600; margin-bottom: 0.5rem; }
+  .moat-body { font-size: 0.85rem; color: var(--slate); line-height: 1.6; }
+
+  /* ── TEAM ── */
+  .team-hero {
+    background: linear-gradient(135deg, rgba(0,119,168,0.15), rgba(127,119,221,0.1));
+    border: 1px solid rgba(0,180,216,0.15); border-radius: 16px;
+    padding: 2rem 2.5rem; margin-bottom: 3rem;
+    font-size: 1rem; color: var(--slate); line-height: 1.75;
+  }
+  .team-hero strong { color: var(--white); }
+  .team-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 3rem; }
+  .team-card {
+    background: var(--card); border-radius: 16px; padding: 2rem;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .team-avatar {
+    width: 56px; height: 56px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; font-weight: 700;
+    margin-bottom: 1.25rem;
+  }
+  .team-name { font-family: 'Space Grotesk', sans-serif; font-size: 1.25rem; font-weight: 700; margin-bottom: 0.25rem; }
+  .team-role { font-size: 0.85rem; font-style: italic; margin-bottom: 1.25rem; }
+  .team-skills { display: flex; flex-direction: column; gap: 0.55rem; }
+  .team-skill { display: flex; align-items: flex-start; gap: 0.65rem; font-size: 0.88rem; color: var(--slate); }
+  .team-skill::before { content: '▸'; flex-shrink: 0; margin-top: 0.05rem; }
+
+  .why-us {
+    background: var(--card); border-radius: 12px; padding: 2rem;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .why-us h3 { font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; font-weight: 700; margin-bottom: 1.25rem; color: var(--cyan); }
+  .why-items { display: flex; flex-direction: column; gap: 1rem; }
+  .why-item { display: grid; grid-template-columns: 40px 1fr; gap: 1rem; align-items: start; }
+  .why-bullet {
+    width: 32px; height: 32px; border-radius: 8px; background: rgba(0,180,216,0.12);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.9rem; flex-shrink: 0;
+  }
+  .why-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.2rem; }
+  .why-desc { font-size: 0.85rem; color: var(--slate); line-height: 1.55; }
+
+  /* ── CONTACT / FOOTER ── */
+  .contact-band {
+    border-top: 1px solid rgba(255,255,255,0.06);
+    padding: 2rem; text-align: center;
+    font-size: 0.85rem; color: var(--dim);
+    margin-top: 3rem;
+  }
+  .contact-band strong { color: var(--slate); }
+
+  /* ── SIGNUP ── */
+  .signup-wrap {
+    min-height: calc(100vh - 64px);
+    display: flex; align-items: center; justify-content: center;
+    padding: 3rem 1.5rem;
+  }
+  .signup-card {
+    background: var(--card); border-radius: 20px;
+    border: 1px solid rgba(0,180,216,0.18);
+    padding: 3rem 2.5rem; max-width: 520px; width: 100%;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+    text-align: center;
+  }
+  .signup-icon {
+    font-size: 2.8rem; margin-bottom: 1.25rem;
+  }
+  .signup-hook {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(1.6rem, 4vw, 2.1rem);
+    font-weight: 700; letter-spacing: -0.03em;
+    line-height: 1.15; margin-bottom: 1rem;
+  }
+  .signup-hook .accent { color: var(--cyan); }
+  .signup-sub {
+    font-size: 0.95rem; color: var(--slate); line-height: 1.7;
+    margin-bottom: 0.75rem;
+  }
+  .signup-pills {
+    display: flex; flex-wrap: wrap; gap: 0.5rem;
+    justify-content: center; margin-bottom: 2rem;
+  }
+  .signup-pill {
+    background: rgba(0,180,216,0.1); border: 1px solid rgba(0,180,216,0.25);
+    border-radius: 20px; padding: 0.3rem 0.9rem;
+    font-size: 0.8rem; color: var(--cyan); font-weight: 500;
+  }
+  .signup-form { display: flex; flex-direction: column; gap: 0.85rem; text-align: left; }
+  .signup-form label {
+    font-size: 0.8rem; font-weight: 600; color: var(--slate);
+    letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 0.3rem;
+    display: block;
+  }
+  .signup-form input {
+    width: 100%; background: var(--mid); border: 1.5px solid rgba(255,255,255,0.08);
+    border-radius: 10px; padding: 0.85rem 1rem;
+    font-family: 'Inter', sans-serif; font-size: 0.95rem; color: var(--white);
+    outline: none; transition: border-color 0.2s;
+  }
+  .signup-form input::placeholder { color: var(--dim); }
+  .signup-form input:focus { border-color: var(--cyan); }
+  .signup-role-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .role-btn {
+    background: var(--mid); border: 1.5px solid rgba(255,255,255,0.08);
+    border-radius: 10px; padding: 0.75rem; cursor: pointer;
+    font-family: 'Inter', sans-serif; font-size: 0.88rem; color: var(--slate);
+    text-align: center; transition: border-color 0.2s, color 0.2s, background 0.2s;
+  }
+  .role-btn:hover { border-color: rgba(0,180,216,0.4); color: var(--white); }
+  .role-btn.selected { border-color: var(--cyan); color: var(--cyan); background: rgba(0,180,216,0.08); }
+  .signup-submit {
+    width: 100%; background: var(--cyan); color: var(--navy);
+    font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1rem;
+    padding: 0.9rem; border-radius: 10px; border: none; cursor: pointer;
+    margin-top: 0.5rem; transition: background 0.2s, transform 0.15s;
+  }
+  .signup-submit:hover { background: #33c6e8; transform: translateY(-1px); }
+  .signup-note { font-size: 0.78rem; color: var(--dim); margin-top: 0.75rem; text-align: center; }
+
+  /* thank you state */
+  .thankyou-wrap {
+    display: none; flex-direction: column; align-items: center;
+    text-align: center; padding: 1rem 0;
+  }
+  .thankyou-wrap.active { display: flex; }
+  .thankyou-icon { font-size: 3.5rem; margin-bottom: 1.25rem; }
+  .thankyou-title {
+    font-family: 'Space Grotesk', sans-serif; font-size: 1.8rem;
+    font-weight: 700; margin-bottom: 0.75rem; color: var(--mint);
+  }
+  .thankyou-msg { font-size: 0.95rem; color: var(--slate); line-height: 1.7; max-width: 380px; }
+  .thankyou-back {
+    margin-top: 2rem; background: transparent; color: var(--cyan);
+    border: 1.5px solid rgba(0,180,216,0.4); border-radius: 10px;
+    padding: 0.7rem 1.5rem; font-family: 'Inter', sans-serif;
+    font-size: 0.88rem; font-weight: 600; cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .thankyou-back:hover { border-color: var(--cyan); background: rgba(0,180,216,0.07); }
+
+  @media (max-width: 860px) {
+    .hero-inner, .demo-wrap, .team-grid, .card-grid-3, .moat-grid { grid-template-columns: 1fr; }
+    .card-grid-2 { grid-template-columns: 1fr; }
+    .stat-row { grid-template-columns: 1fr 1fr; }
+    .flow-steps { grid-template-columns: 1fr 1fr; }
+    .flow-step:first-child { border-radius: 12px 0 0 0; }
+    .flow-step:nth-child(2) { border-radius: 0 12px 0 0; }
+    .flow-step:nth-child(3) { border-radius: 0 0 0 12px; }
+    .flow-step:last-child { border-radius: 0 0 12px 0; }
+    .flow-step:not(:last-child)::after { display: none; }
+    nav { padding: 0 1rem; }
+    .nav-tabs button { font-size: 0.78rem; padding: 0.45rem 0.65rem; }
+    .section-inner { padding: 2.5rem 1.25rem; }
+    .tech-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="#" class="nav-logo" onclick="showSection('home');return false;">
+    <div class="logo-dot"></div>Smart<span>Park</span>
+  </a>
+  <ul class="nav-tabs">
+    <li><button onclick="showSection('home')" id="tab-home" class="active">Home</button></li>
+    <li><button onclick="showSection('problem')" id="tab-problem">Problem</button></li>
+    <li><button onclick="showSection('solution')" id="tab-solution">Solution</button></li>
+    <li><button onclick="showSection('demo')" id="tab-demo">Demo</button></li>
+    <li><button onclick="showSection('compare')" id="tab-compare">Why SmartPark</button></li>
+    <li><button onclick="showSection('team')" id="tab-team">Team</button></li>
+    <li><button onclick="showSection('signup')" id="tab-signup" style="color:var(--cyan);border:1.5px solid rgba(0,180,216,0.35);border-radius:6px;">Get Early Access</button></li>
+  </ul>
+</nav>
+
+<!-- ══ HOME / HERO ══════════════════════════════════════════════ -->
+<section id="home" class="active">
+  <div class="hero-inner">
+    <div>
+      <div class="hero-eyebrow">AI-Powered Campus Parking</div>
+      <h1 class="hero-title">
+        Never circle a<br><span class="accent">parking lot</span><br>again.
+      </h1>
+      <p class="hero-sub">
+        SmartPark uses computer vision cameras on existing light posts to show students exactly which spots are open — before they leave their building.
+      </p>
+      <div class="hero-cta">
+        <button class="btn-primary" onclick="showSection('demo')">See the Demo</button>
+        <button class="btn-outline" onclick="showSection('problem')">The Problem</button>
+      </div>
+    </div>
+
+    <div class="lot-wrap">
+      <div class="lot-label">
+        <span>Zone 2 — Commuter Surface Lot</span>
+        <div class="lot-status"><div class="live-dot"></div> Live CV Feed</div>
+      </div>
+      <div class="parking-grid" id="heroGrid"></div>
+      <div class="lot-legend">
+        <div class="legend-item"><div class="legend-dot ld-open"></div> Open</div>
+        <div class="legend-item"><div class="legend-dot ld-taken"></div> Occupied</div>
+        <div class="legend-item"><div class="legend-dot ld-you"></div> Recommended for you</div>
+      </div>
+      <div class="lot-stats">
+        <div class="lot-stat">
+          <div class="lot-stat-val val-open" id="heroOpen">—</div>
+          <div class="lot-stat-lbl">Open spots</div>
+        </div>
+        <div class="lot-stat">
+          <div class="lot-stat-val val-taken" id="heroTaken">—</div>
+          <div class="lot-stat-lbl">Occupied</div>
+        </div>
+        <div class="lot-stat">
+          <div class="lot-stat-val val-total">32</div>
+          <div class="lot-stat-lbl">Total spaces</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ PROBLEM ══════════════════════════════════════════════════ -->
+<section id="problem">
+  <div class="section-inner">
+    <div class="sec-eyebrow">The Problem</div>
+    <h2 class="sec-title">Students waste up to an hour finding parking — every day.</h2>
+    <p class="sec-lead">
+      Campus parking congestion is a chronic, high-severity problem affecting thousands of commuter students and faculty each day. Current solutions don't work — and the data proves it.
+    </p>
+
+    <div class="problem-hook">
+      <strong>"I didn't leave enough time to find parking. I tried the paid lot closest to my class — it was full. Checking probably cost me 7 minutes, and I ended up late to a friend's presentation."</strong>
+      <br><br>— Anna Knorr, Co-Founder, Fall 2025
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-num" style="color:var(--coral)">~1hr</div>
+        <div class="stat-label">Max time students circle dorm lots on Sunday nights looking for a spot</div>
+        <div class="stat-source">Source: Student interviews</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" style="color:var(--amber)">10:45</div>
+        <div class="stat-label">Peak congestion time — lots fill in a known order every single weekday</div>
+        <div class="stat-source">Source: Campus Parking Operations</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" style="color:var(--purple)">$1.3M</div>
+        <div class="stat-label">One university's estimate to deploy a full real-time detection system — too expensive</div>
+        <div class="stat-source">Source: Campus Parking Operations</div>
+      </div>
+    </div>
+
+    <div class="card-grid card-grid-3">
+      <div class="card">
+        <div class="card-accent" style="background:var(--coral)"></div>
+        <div class="card-title">Inaccurate existing data</div>
+        <div class="card-body">ParkMobile's availability feature shows open spots that are actually full — data that relied on paying customers. Students learned not to trust it, making the feature worse than useless.</div>
+      </div>
+      <div class="card">
+        <div class="card-accent" style="background:var(--amber)"></div>
+        <div class="card-title">Real consequences</div>
+        <div class="card-body">Students arrive late to class, park in the wrong zone and receive tickets, and drive aggressively through lots searching for spaces — creating genuine safety risks on campus.</div>
+      </div>
+      <div class="card">
+        <div class="card-accent" style="background:var(--purple)"></div>
+        <div class="card-title">No guidance before you go</div>
+        <div class="card-body">Students have no way to know which lot to target before leaving their building. So they guess — and waste time circling when they guess wrong.</div>
+      </div>
+    </div>
+
+    <div class="five-why">
+      <h3>5 Whys — Root Cause Analysis</h3>
+      <div class="why-chain">
+        <div class="why-step">
+          <div class="why-num">1</div>
+          <div class="why-content">
+            <div class="why-q">Why do students have trouble finding parking?</div>
+            <div class="why-a">Because the lot is usually already filled up by the time they arrive.</div>
+          </div>
+        </div>
+        <div class="why-step">
+          <div class="why-num">2</div>
+          <div class="why-content">
+            <div class="why-q">Why is the lot already full?</div>
+            <div class="why-a">Because students don't get there early enough — rush hours cause unpredictable delays.</div>
+          </div>
+        </div>
+        <div class="why-step">
+          <div class="why-num">3</div>
+          <div class="why-content">
+            <div class="why-q">Why don't students plan to leave earlier?</div>
+            <div class="why-a">Because they try other lots closer to their building first, which are also full — wasting more time.</div>
+          </div>
+        </div>
+        <div class="why-step">
+          <div class="why-num">4</div>
+          <div class="why-content">
+            <div class="why-q">Why do they try those lots first?</div>
+            <div class="why-a">Because they don't know if the spot will be taken, and the time saved if it's open seems worth the risk.</div>
+          </div>
+        </div>
+        <div class="why-step">
+          <div class="why-num">5</div>
+          <div class="why-content">
+            <div class="why-q">Why don't they know the lot status?</div>
+            <div class="why-a"><strong>Because there is no reliable, real-time map of parking spot availability.</strong> That's what SmartPark solves.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SOLUTION ══════════════════════════════════════════════════ -->
+<section id="solution">
+  <div class="section-inner">
+    <div class="sec-eyebrow">The Solution</div>
+    <h2 class="sec-title">Know where to park before you leave.</h2>
+    <p class="sec-lead">
+      SmartPark combines low-cost computer vision cameras, cloud processing, and a mobile app to give students real-time lot availability and pre-departure guidance — all within your university's existing infrastructure.
+    </p>
+
+    <div class="flow-steps">
+      <div class="flow-step">
+        <div class="flow-step-top"></div>
+        <div class="flow-n">01</div>
+        <div class="flow-title">Camera Detects</div>
+        <div class="flow-body">Low-cost cameras ($50–150) mounted on existing light posts detect spot obstructions using CV — no face or plate data captured.</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-step-top"></div>
+        <div class="flow-n">02</div>
+        <div class="flow-title">Cloud Processes</div>
+        <div class="flow-body">Obstruction data is processed via university cloud infrastructure, combining live CV data with known historical fill patterns.</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-step-top"></div>
+        <div class="flow-n">03</div>
+        <div class="flow-title">App Recommends</div>
+        <div class="flow-body">SmartPark recommends the best lot for your zone, class schedule, and time of day — before you even leave your building.</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-step-top"></div>
+        <div class="flow-n">04</div>
+        <div class="flow-title">You Park</div>
+        <div class="flow-body">GPS navigation guides you to the specific lot and section via Apple Maps or Google Maps integration. On time, every time.</div>
+      </div>
+    </div>
+
+    <br>
+    <h3 style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:1.25rem;">Technology Stack</h3>
+    <div class="tech-grid">
+      <div class="tech-card">
+        <div><div class="tech-badge">CV Model</div></div>
+        <div>
+          <div class="tech-name">Obstruction Detection</div>
+          <div class="tech-desc">Detects whether a spot is blocked — not what's blocking it. Far simpler and more reliable than full vehicle recognition. No biometric data at all.</div>
+        </div>
+      </div>
+      <div class="tech-card">
+        <div><div class="tech-badge">Edge</div></div>
+        <div>
+          <div class="tech-name">Arduino Uno Q</div>
+          <div class="tech-desc">On-device edge computing for low-latency inference, reducing dependence on cloud connectivity. Identified by Arrow Representative Jeffery Hill.</div>
+        </div>
+      </div>
+      <div class="tech-card">
+        <div><div class="tech-badge">Cloud</div></div>
+        <div>
+          <div class="tech-name">University-Hosted Server</div>
+          <div class="tech-desc">Pattern modeling and app data served from university infrastructure — keeping data within institutional control and meeting privacy requirements.</div>
+        </div>
+      </div>
+      <div class="tech-card">
+        <div><div class="tech-badge">Auth</div></div>
+        <div>
+          <div class="tech-name">SSO + DUO 2FA + Permit Check</div>
+          <div class="tech-desc">University single sign-on with DUO two-factor authentication ensures only valid permit holders see the lots they're authorized to use.</div>
+        </div>
+      </div>
+      <div class="tech-card">
+        <div><div class="tech-badge">Mobile</div></div>
+        <div>
+          <div class="tech-name">iOS & Android App</div>
+          <div class="tech-desc">Native mobile app with Apple Maps and Google Maps integration for turn-by-turn navigation to specific lots and zones.</div>
+        </div>
+      </div>
+      <div class="tech-card">
+        <div><div class="tech-badge">AI</div></div>
+        <div>
+          <div class="tech-name">Predictive Pattern Model</div>
+          <div class="tech-desc">Uses your campus's confirmed lot-fill patterns (lots fill in a known order, peak at 10:45 AM) to predict availability even when live camera data is unavailable.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="insight-box">
+      <h4>Graceful Degradation</h4>
+      <p>If camera data is unavailable due to weather, power, or connectivity issues, SmartPark automatically falls back to <strong>historical pattern-based predictions</strong> using the lot-fill sequences confirmed by your university's Parking Operations. Students still get guidance — just prediction-based rather than live. This makes SmartPark more resilient than any system that simply fails when hardware does.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══ DEMO ═══════════════════════════════════════════════════════ -->
+<section id="demo">
+  <div class="section-inner">
+    <div class="sec-eyebrow">App Demo</div>
+    <h2 class="sec-title">See SmartPark in action.</h2>
+    <p class="sec-lead">Explore the key screens of the SmartPark mobile experience. Click any screen below to preview it on the left.</p>
+
+    <div class="demo-wrap">
+      <div class="phone-frame">
+        <div class="phone-notch"></div>
+        <div class="phone-screen">
+
+          <!-- SCREEN: HOME -->
+          <div class="app-screen active" id="appscreen-home">
+            <div class="app-header">
+              <div class="app-logo">SmartPark</div>
+              <div class="app-user">Anna K. · Zone 2</div>
+            </div>
+            <div class="app-zone-badge">📍 Zone 2 — Commuter</div>
+            <div class="app-rec">
+              <div class="app-rec-label">⚡ Recommended lot</div>
+              <div class="app-rec-lot">Lot C — South Entrance</div>
+              <div class="app-rec-sub">11 spots open · 3 min walk to Main Hall</div>
+            </div>
+            <div class="app-mini-grid" id="demoGrid1"></div>
+            <button class="app-go-btn" onclick="alert('In the real app, this launches turn-by-turn navigation via Apple Maps or Google Maps!')">🗺  Navigate to Lot C</button>
+            <div class="app-info-row">
+              <div class="app-info-chip"><div class="chip-val cv-open">11</div><div class="chip-lbl">Open</div></div>
+              <div class="app-info-chip"><div class="chip-val cv-time">8 min</div><div class="chip-lbl">Drive time</div></div>
+              <div class="app-info-chip"><div class="chip-val cv-walk">3 min</div><div class="chip-lbl">Walk</div></div>
+            </div>
+          </div>
+
+          <!-- SCREEN: SCHEDULE -->
+          <div class="app-screen" id="appscreen-schedule">
+            <div class="app-header">
+              <div class="app-logo">SmartPark</div>
+              <div class="app-user">Schedule AI</div>
+            </div>
+            <div style="margin-bottom:0.75rem;">
+              <div style="font-size:0.75rem;color:var(--dim);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.08em;">Today's Classes</div>
+              <div style="display:flex;flex-direction:column;gap:0.5rem;">
+                <div style="background:var(--card);border-radius:8px;padding:0.75rem;border-left:3px solid var(--cyan);">
+                  <div style="font-weight:600;font-size:0.9rem;">ISE 475 · 9:30 AM</div>
+                  <div style="font-size:0.78rem;color:var(--dim);">Main Hall 109 · Recommend leaving by 9:05</div>
+                </div>
+                <div style="background:var(--card);border-radius:8px;padding:0.75rem;border-left:3px solid var(--teal);">
+                  <div style="font-weight:600;font-size:0.9rem;">CSC 330 · 12:00 PM</div>
+                  <div style="font-size:0.78rem;color:var(--dim);">Science Hall 201 · Peak hour — leave 15 min early</div>
+                </div>
+                <div style="background:var(--card);border-radius:8px;padding:0.75rem;border-left:3px solid var(--mint);">
+                  <div style="font-weight:600;font-size:0.9rem;">ISE 310 · 3:30 PM</div>
+                  <div style="font-size:0.78rem;color:var(--dim);">Arts Building 114 · Low congestion expected</div>
+                </div>
+              </div>
+            </div>
+            <div class="app-rec" style="margin-top:0.75rem;">
+              <div class="app-rec-label">🤖 AI Suggestion</div>
+              <div class="app-rec-lot" style="font-size:0.95rem;">Leave at 9:05 for your 9:30 class</div>
+              <div class="app-rec-sub">Lot B fills by 9:20 on Tuesdays · Lot C has 11 open</div>
+            </div>
+            <button class="app-go-btn" style="margin-top:0.75rem;" onclick="alert('In the real app, import your class schedule PDF to get personalized daily departure suggestions!')">📅 Import Class Schedule</button>
+          </div>
+
+          <!-- SCREEN: LOT MAP -->
+          <div class="app-screen" id="appscreen-map">
+            <div class="app-header">
+              <div class="app-logo">SmartPark</div>
+              <div class="app-user">Lot Map</div>
+            </div>
+            <div style="background:var(--card);border-radius:10px;padding:1rem;margin-bottom:0.75rem;">
+              <div style="font-size:0.72rem;color:var(--dim);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.08em;">Your Campus — Live Availability</div>
+              <div style="display:flex;flex-direction:column;gap:0.5rem;">
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+                  <div><div style="font-weight:600;font-size:0.88rem;">Lot A — North</div><div style="font-size:0.75rem;color:var(--dim);">Faculty Zone</div></div>
+                  <div style="color:var(--coral);font-weight:700;font-size:0.88rem;">2 open</div>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid rgba(255,255,255,0.05);background:rgba(0,180,216,0.05);border-radius:6px;padding:0.5rem;">
+                  <div><div style="font-weight:600;font-size:0.88rem;">Lot B — East ⭐</div><div style="font-size:0.75rem;color:var(--dim);">Student Zone 2</div></div>
+                  <div style="color:var(--mint);font-weight:700;font-size:0.88rem;">11 open</div>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+                  <div><div style="font-weight:600;font-size:0.88rem;">Lot C — West</div><div style="font-size:0.75rem;color:var(--dim);">Student Zone 2</div></div>
+                  <div style="color:var(--amber);font-weight:700;font-size:0.88rem;">4 open</div>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+                  <div><div style="font-weight:600;font-size:0.88rem;">Parking Deck 1</div><div style="font-size:0.75rem;color:var(--dim);">All zones · Paid</div></div>
+                  <div style="color:var(--mint);font-weight:700;font-size:0.88rem;">38 open</div>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;">
+                  <div><div style="font-weight:600;font-size:0.88rem;">Lot D — ADA</div><div style="font-size:0.75rem;color:var(--dim);">Accessible spots</div></div>
+                  <div style="color:var(--mint);font-weight:700;font-size:0.88rem;">3 open</div>
+                </div>
+              </div>
+            </div>
+            <button class="app-go-btn" onclick="alert('In the real app, tapping a lot launches navigation via your preferred maps app!')">🗺  Navigate to Lot B</button>
+          </div>
+
+          <!-- SCREEN: ALERTS -->
+          <div class="app-screen" id="appscreen-alerts">
+            <div class="app-header">
+              <div class="app-logo">SmartPark</div>
+              <div class="app-user">Notifications</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:0.6rem;">
+              <div style="background:rgba(224,92,58,0.12);border:1px solid rgba(224,92,58,0.3);border-radius:8px;padding:0.85rem;">
+                <div style="font-size:0.72rem;color:var(--coral);font-weight:600;margin-bottom:0.3rem;">⚠ EVENT ALERT — 9:10 AM</div>
+                <div style="font-size:0.85rem;">Home game tonight. Lot C blocked from 4 PM. Consider Deck 1 for afternoon classes.</div>
+              </div>
+              <div style="background:rgba(244,163,0,0.1);border:1px solid rgba(244,163,0,0.25);border-radius:8px;padding:0.85rem;">
+                <div style="font-size:0.72rem;color:var(--amber);font-weight:600;margin-bottom:0.3rem;">📈 BUSIER THAN USUAL — 9:05 AM</div>
+                <div style="font-size:0.85rem;">Zone 2 lots 15% fuller than average for Tuesday. Leave 10 minutes earlier than usual.</div>
+              </div>
+              <div style="background:rgba(2,195,154,0.1);border:1px solid rgba(2,195,154,0.25);border-radius:8px;padding:0.85rem;">
+                <div style="font-size:0.72rem;color:var(--mint);font-weight:600;margin-bottom:0.3rem;">✓ SPOT RESERVED — 8:52 AM</div>
+                <div style="font-size:0.85rem;">Lot B, Section 3 saved for 15 minutes. You're on track to arrive on time.</div>
+              </div>
+              <div style="background:var(--card);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:0.85rem;">
+                <div style="font-size:0.72rem;color:var(--dim);font-weight:600;margin-bottom:0.3rem;">📋 YESTERDAY — 5:00 PM</div>
+                <div style="font-size:0.85rem;">Your parking session: Lot B, 47 min. Arrived 4 min early. Great job!</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="demo-controls">
+        <h3>Explore the App</h3>
+        <p>SmartPark is a mobile-first experience built around the student's daily parking routine. Click a screen to preview it.</p>
+        <div class="screen-btns">
+          <button class="screen-btn active" id="sbtn-home" onclick="switchScreen('home')">
+            <div class="screen-btn-icon" style="background:rgba(0,180,216,0.15);">🏠</div>
+            <div>
+              <div class="screen-btn-title">Home — Lot Recommendation</div>
+              <div class="screen-btn-sub">Real-time open spots + one-tap navigation</div>
+            </div>
+          </button>
+          <button class="screen-btn" id="sbtn-schedule" onclick="switchScreen('schedule')">
+            <div class="screen-btn-icon" style="background:rgba(2,195,154,0.15);">📅</div>
+            <div>
+              <div class="screen-btn-title">Schedule AI</div>
+              <div class="screen-btn-sub">Class schedule import + smart departure reminders</div>
+            </div>
+          </button>
+          <button class="screen-btn" id="sbtn-map" onclick="switchScreen('map')">
+            <div class="screen-btn-icon" style="background:rgba(127,119,221,0.15);">🗺</div>
+            <div>
+              <div class="screen-btn-title">Campus Lot Map</div>
+              <div class="screen-btn-sub">Live availability across all campus zones</div>
+            </div>
+          </button>
+          <button class="screen-btn" id="sbtn-alerts" onclick="switchScreen('alerts')">
+            <div class="screen-btn-icon" style="background:rgba(244,163,0,0.15);">🔔</div>
+            <div>
+              <div class="screen-btn-title">Smart Alerts</div>
+              <div class="screen-btn-sub">Event warnings, busy alerts, spot reservations</div>
+            </div>
+          </button>
+        </div>
+
+        <div class="demo-features">
+          <h4>All features</h4>
+          <div class="feature-list">
+            <div class="feature-item">Real-time CV-confirmed spot availability</div>
+            <div class="feature-item">Pre-departure guidance — know before you leave</div>
+            <div class="feature-item">Zone-aware: only shows lots you're permitted to use</div>
+            <div class="feature-item">Class schedule integration + AI departure timing</div>
+            <div class="feature-item">Event & busy-period notifications</div>
+            <div class="feature-item">GPS navigation via Apple Maps / Google Maps</div>
+            <div class="feature-item">University SSO + DUO 2FA login</div>
+            <div class="feature-item">Graceful fallback to pattern predictions if cameras offline</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ COMPARE ════════════════════════════════════════════════════ -->
+<section id="compare">
+  <div class="section-inner">
+    <div class="sec-eyebrow">Why SmartPark</div>
+    <h2 class="sec-title">The only parking solution built for how campuses actually work.</h2>
+    <p class="sec-lead">General parking apps treat universities like city streets. SmartPark is purpose-built for zone-based, permit-driven, commuter campus parking — a problem no competitor has solved.</p>
+
+    <div class="comp-table-wrap">
+      <table class="comp-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>ParkMobile</th>
+            <th>SpotHero</th>
+            <th>Passport Parking</th>
+            <th>ParkHub</th>
+            <th class="sp-col">SmartPark</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Real-time spot accuracy</td>
+            <td><span class="partial-badge">Partial</span></td>
+            <td><span class="no-badge">No</span></td>
+            <td><span class="no-badge">No</span></td>
+            <td><span class="partial-badge">Partial</span></td>
+            <td class="sp-col"><span class="yes-badge">Yes</span></td>
+          </tr>
+          <tr>
+            <td>CV / sensor-based detection</td>
+            <td><span class="no-badge">No</span></td>
+            <td><span class="no-badge">No</span></td>
+            <td><span class="no-badge">No</span></td>
+            <td><span class="partial-badge">Partial</span></td>
+            <td class="sp-col"><span class="yes-badge">Yes</span></td>
+          </tr>
+          <tr>
+            <td>Predictive pre-departure guidance</td>
+            <td><span class="no-badge">No</span></td>
+            <td><span class="no-badge">No</span></td>
+            <td><span class="no-badge">No</span></td>
+            <td><span class="no-badge">No</span></td>
+            <td class="sp-col"><span class="yes-badge">Yes</span></td>
+          </tr>
+          <tr>
+            <td>Class schedule integration</td>
+            <td><span class="no-badge">No</span></td>
+            <td><span class="no-badge">No</span></td>
+            <td><span class="no-badge">No</span></td>
+            <td><span class="no-badge">No</span></td>
+            <td class="sp-col"><span class="yes-badge">Yes</span></td>
+          </tr>
+          <tr>
+            <td>University zone-awareness</td>
+            <td><span class="partial-badge">Partial</span></td>
+            <td><span class="no-badge">No</span></td>
+            <td><span class="partial-badge">Partial</span></td>
+            <td><span class="partial-badge">Partial</span></td>
+            <td class="sp-col"><span class="yes-badge">Yes</span></td>
+          </tr>
+          <tr>
+            <td>Privacy-first (no plates / faces)</td>
+            <td><span class="yes-badge">Yes</span></td>
+            <td><span class="yes-badge">Yes</span></td>
+            <td><span class="partial-badge">Partial</span></td>
+            <td><span class="no-badge">No</span></td>
+            <td class="sp-col"><span class="yes-badge">Yes</span></td>
+          </tr>
+          <tr>
+            <td>Affordable for self-funded depts.</td>
+            <td><span class="yes-badge">Yes</span></td>
+            <td><span class="yes-badge">Yes</span></td>
+            <td><span class="partial-badge">Partial</span></td>
+            <td><span class="no-badge">No</span></td>
+            <td class="sp-col"><span class="yes-badge">Yes</span></td>
+          </tr>
+          <tr>
+            <td>Campus-only focus</td>
+            <td><span class="no-badge">No</span></td>
+            <td><span class="no-badge">No</span></td>
+            <td><span class="partial-badge">Partial</span></td>
+            <td><span class="partial-badge">Partial</span></td>
+            <td class="sp-col"><span class="yes-badge">Yes</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="insight-box">
+      <h4>The Key Insight</h4>
+      <p>ParkMobile's availability feature relies on paying users to infer occupancy. <strong>If someone parks without paying, the spot appears open — producing false data.</strong> SmartPark's cameras detect actual obstructions independently of user behavior. No participation required. No false readings.</p>
+    </div>
+
+    <div class="moat-grid">
+      <div class="moat-card">
+        <div class="moat-icon">🏛</div>
+        <div class="moat-title">University data relationships</div>
+        <div class="moat-body">Once embedded in a university's IT infrastructure, switching costs are high. Historical lot-fill data becomes part of the prediction model — data a competitor would need to start over to replicate.</div>
+      </div>
+      <div class="moat-card">
+        <div class="moat-icon">🧠</div>
+        <div class="moat-title">Campus-trained CV models</div>
+        <div class="moat-body">Each deployment trains the obstruction model on that campus's specific lots, lighting, and layout. Over time, SmartPark builds a library of pre-trained campus configs that make new deployments faster and cheaper.</div>
+      </div>
+      <div class="moat-card">
+        <div class="moat-icon">📱</div>
+        <div class="moat-title">Daily student habit</div>
+        <div class="moat-body">Students who import their class schedule and receive daily parking suggestions build a daily-use habit. High engagement and deep schedule integration makes the app sticky — students don't switch mid-semester.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ TEAM ═══════════════════════════════════════════════════════ -->
+<section id="team">
+  <div class="section-inner">
+    <div class="sec-eyebrow">The Team</div>
+    <h2 class="sec-title">We didn't find this problem. We lived it.</h2>
+
+    <div class="team-hero">
+      <strong>We are not researchers who stumbled onto a parking dataset.</strong> We are commuter students who experienced this problem every single day — circling lots, arriving late, and parking illegally out of frustration. SmartPark exists because we knew the problem well enough to know exactly what was missing.
+    </div>
+
+    <div class="team-grid">
+      <div class="team-card">
+        <div class="team-avatar" style="background:rgba(0,180,216,0.2);color:var(--cyan);">A</div>
+        <div class="team-name">Anna Knorr</div>
+        <div class="team-role" style="color:var(--cyan);">Co-Founder · Product & Research</div>
+        <div class="team-skills">
+          <div class="team-skill" style="color:var(--white);">Commuter student — documented firsthand experience with the daily parking struggle</div>
+          <div class="team-skill">Led all customer discovery: interviews with Parking Operations leadership and commuter students</div>
+          <div class="team-skill">Designed CV architecture: obstruction detection model, Arduino Uno Q edge computing integration</div>
+          <div class="team-skill">End-to-end ideation and research: problem discovery, 5 Whys root cause analysis, and MVP experiment design</div>
+          <div class="team-skill">Full competitive analysis: ParkMobile, SpotHero, Passport Parking, ParkHub feature-by-feature</div>
+          <div class="team-skill">Differentiation strategy: CV-based accuracy, predictive guidance, privacy-first design, and low cost positioning</div>
+        </div>
+      </div>
+
+      <div class="team-card">
+        <div class="team-avatar" style="background:rgba(2,195,154,0.2);color:var(--mint);">N</div>
+        <div class="team-name">Nadia Bautista-Perez</div>
+        <div class="team-role" style="color:var(--mint);">Co-Founder · Strategy & Business</div>
+        <div class="team-skills">
+          <div class="team-skill" style="color:var(--white);">Commuter student — independent corroboration of the parking pain, including off-campus event congestion</div>
+          <div class="team-skill">Developed TAM/SAM/SOM ($2.47B → $370M → $1.5M) with bottom-up revenue model across 3-year horizon</div>
+          <div class="team-skill">Pricing rationale and go-to-market phasing (pilot campus → regional → national)</div>
+          <div class="team-skill">High-fidelity app prototype with 7 key screens covering the full student parking journey</div>
+          <div class="team-skill">Executive memo synthesis and strategic proceed/pivot/refine decision framework</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="why-us">
+      <h3>Why us? Why now?</h3>
+      <div class="why-items">
+        <div class="why-item">
+          <div class="why-bullet">🎓</div>
+          <div>
+            <div class="why-title">Domain expertise through lived experience</div>
+            <div class="why-desc">Years of daily commuter parking at our university. We know which lots fill first, which zones are underserved, and what students actually need — not because we read a report, but because we were there.</div>
+          </div>
+        </div>
+        <div class="why-item">
+          <div class="why-bullet">🤝</div>
+          <div>
+            <div class="why-title">Direct institutional relationship</div>
+            <div class="why-desc">We have already conducted direct interviews with Parking Operations leadership — including a pricing deep-dive. That relationship is the foundation of the pilot partnership.</div>
+          </div>
+        </div>
+        <div class="why-item">
+          <div class="why-bullet">📐</div>
+          <div>
+            <div class="why-title">Complementary skills</div>
+            <div class="why-desc">Anna brings technical depth in CV architecture and product design. Nadia brings market analysis, business modeling, and go-to-market strategy. Together we cover both sides of an AI hardware startup.</div>
+          </div>
+        </div>
+        <div class="why-item">
+          <div class="why-bullet">⏰</div>
+          <div>
+            <div class="why-title">Why now?</div>
+            <div class="why-desc">IoT hardware costs drop every year (Moore's Law). University enrollment is growing across the country, increasing parking pressure. ParkMobile's failed availability feature has created a trust gap — and we can fill it with a solution that actually works.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="contact-band">
+      <strong>SmartPark</strong> · Anna Knorr & Nadia Bautista-Perez · ISE/CSC 475 · Spring 2026<br>
+      <span style="margin-top:0.5rem;display:block;">Built on 6 homework assignments, 2 expert interviews, 15 idea journal entries, and 4 years of living the problem.</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SIGNUP ═════════════════════════════════════════════════════ -->
+<section id="signup">
+  <div class="signup-wrap">
+    <div class="signup-card">
+
+      <!-- FORM STATE -->
+      <div id="formState">
+        <div class="signup-icon">🚗</div>
+        <h2 class="signup-hook">Tired of not knowing<br>where to <span class="accent">park</span>?</h2>
+        <p class="signup-sub">
+          SmartPark uses cameras on existing lot infrastructure to show you open spots in real time — and recommends the best lot before you even leave your building.
+        </p>
+        <div class="signup-pills">
+          <div class="signup-pill">✓ Real-time spot availability</div>
+          <div class="signup-pill">✓ Pre-departure guidance</div>
+          <div class="signup-pill">✓ Zone-aware recommendations</div>
+          <div class="signup-pill">✓ Class schedule integration</div>
+        </div>
+
+        <form class="signup-form" onsubmit="handleSignup(event)">
+          <div>
+            <label for="sig-name">Your name</label>
+            <input id="sig-name" type="text" placeholder="First and last name" required>
+          </div>
+          <div>
+            <label for="sig-email">Campus email</label>
+            <input id="sig-email" type="email" placeholder="you@university.edu" required>
+          </div>
+          <div>
+            <label>I am a…</label>
+            <div class="signup-role-row">
+              <button type="button" class="role-btn" id="role-student" onclick="selectRole('student')">🎓 Student</button>
+              <button type="button" class="role-btn" id="role-faculty" onclick="selectRole('faculty')">👩‍🏫 Faculty / Staff</button>
+            </div>
+          </div>
+          <button type="submit" class="signup-submit">Count me in →</button>
+          <p class="signup-note">No spam, ever. We'll only reach out when SmartPark is ready at your campus.</p>
+        </form>
+      </div>
+
+      <!-- THANK YOU STATE -->
+      <div class="thankyou-wrap" id="thankYouState">
+        <div class="thankyou-icon">🎉</div>
+        <div class="thankyou-title">You're on the list!</div>
+        <p class="thankyou-msg">
+          Thanks for your interest in SmartPark. We'll be in touch as soon as the app is ready at your campus — no more circling lots.
+        </p>
+        <button class="thankyou-back" onclick="showSection('home')">Back to SmartPark →</button>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<script>
+// ── TAB NAVIGATION ──────────────────────────────────────────────
+function showSection(id) {
+  document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tabs button').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.getElementById('tab-' + id).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (id === 'demo') buildDemoGrid();
+}
+
+// ── PARKING LOT ANIMATION ──────────────────────────────────────
+const TOTAL = 32;
+let heroState = [];
+let selectedIdx = -1;
+
+function initHeroGrid() {
+  heroState = Array.from({ length: TOTAL }, (_, i) => Math.random() > 0.38 ? 'taken' : 'open');
+  // pick a "recommended" spot
+  const openIdxs = heroState.map((s,i) => s==='open' ? i : -1).filter(i=>i>=0);
+  if (openIdxs.length) selectedIdx = openIdxs[Math.floor(openIdxs.length * 0.3)];
+  renderHeroGrid();
+}
+
+function renderHeroGrid() {
+  const grid = document.getElementById('heroGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  let open = 0;
+
+  // Pattern: 1 row (8), aisle, 2 rows (16), aisle, 1 row (8) = 32 spots
+  // We'll use 32 spots total to fit the pattern neatly
+  const rowPattern = [1, 0, 2, 0, 1]; // 0 = aisle
+
+  let spotIdx = 0;
+  rowPattern.forEach(rowCount => {
+    if (rowCount === 0) {
+      const aisle = document.createElement('div');
+      aisle.className = 'parking-aisle';
+      grid.appendChild(aisle);
+    } else {
+      for (let r = 0; r < rowCount; r++) {
+        const row = document.createElement('div');
+        row.className = 'parking-row';
+        for (let c = 0; c < 8; c++) {
+          const state = heroState[spotIdx] || 'open';
+          const div = document.createElement('div');
+          div.className = 'spot ' + (spotIdx === selectedIdx ? 'selected' : state);
+          if (state === 'open') open++;
+          row.appendChild(div);
+          spotIdx++;
+        }
+        grid.appendChild(row);
+      }
+    }
+  });
+
+  const openEl = document.getElementById('heroOpen');
+  const takenEl = document.getElementById('heroTaken');
+  if (openEl) openEl.textContent = open;
+  if (takenEl) takenEl.textContent = (spotIdx) - open;
+}
+
+function tickHeroGrid() {
+  // randomly flip 1-2 spots, scan effect
+  const count = Math.floor(Math.random() * 2) + 1;
+  for (let k = 0; k < count; k++) {
+    const idx = Math.floor(Math.random() * TOTAL);
+    if (idx === selectedIdx) continue;
+    heroState[idx] = heroState[idx] === 'taken' ? 'open' : 'taken';
+    const grid = document.getElementById('heroGrid');
+    if (grid && grid.children[idx]) {
+      grid.children[idx].classList.add('scanning');
+      setTimeout(() => {
+        if (grid.children[idx]) {
+          grid.children[idx].className = 'spot ' + heroState[idx];
+        }
+      }, 650);
+    }
+  }
+  // recount
+  setTimeout(renderHeroGrid, 700);
+}
+
+initHeroGrid();
+setInterval(tickHeroGrid, 1800);
+
+// ── DEMO SCREEN GRID ───────────────────────────────────────────
+function buildDemoGrid() {
+  const g = document.getElementById('demoGrid1');
+  if (!g || g.children.length > 0) return;
+
+  // 4 rows of 6 = 24 spots, pattern: 1 row, aisle, 2 rows, aisle, 1 row
+  const pattern = [
+    'taken','open','taken','open','open','taken',   // row 1
+    'open','taken','taken','open','yours','open',   // row 2
+    'taken','open','open','taken','open','taken',   // row 3
+    'open','open','taken','open','taken','open',    // row 4
+  ];
+
+  const rowPattern = [1, 0, 2, 0, 1];
+  let spotIdx = 0;
+
+  rowPattern.forEach(rowCount => {
+    if (rowCount === 0) {
+      const aisle = document.createElement('div');
+      aisle.className = 'mini-aisle';
+      g.appendChild(aisle);
+    } else {
+      for (let r = 0; r < rowCount; r++) {
+        const row = document.createElement('div');
+        row.className = 'mini-row';
+        for (let c = 0; c < 6; c++) {
+          const s = pattern[spotIdx] || 'open';
+          const d = document.createElement('div');
+          d.className = 'mini-spot ms-' + s;
+          row.appendChild(d);
+          spotIdx++;
+        }
+        g.appendChild(row);
+      }
+    }
+  });
+}
+
+// ── SIGNUP ────────────────────────────────────────────────────
+let selectedRole = null;
+
+function selectRole(role) {
+  selectedRole = role;
+  document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('role-' + role).classList.add('selected');
+}
+
+async function handleSignup(e) {
+  e.preventDefault();
+  const name  = document.getElementById('sig-name').value.trim();
+  const email = document.getElementById('sig-email').value.trim();
+  const role  = selectedRole || 'Not specified';
+  if (!name || !email) return;
+
+  const btn = e.target.querySelector('.signup-submit');
+  btn.textContent = 'Submitting…';
+  btn.disabled = true;
+
+  try {
+    const form = new FormData();
+    form.append('name', name);
+    form.append('email', email);
+    form.append('role', role);
+
+    await fetch('https://script.google.com/macros/s/AKfycbwAaIuEwY6om1gcu8ow8GT-SgLonMa6HAa0yNeseRSZgFEu8O6lDjxwoW6humsCAtleLw/exec', {
+      method: 'POST',
+      mode: 'no-cors',
+      body: form
+    });
+  } catch (err) {
+    console.log('Fetch error (may still have submitted):', err);
+  }
+
+  document.getElementById('formState').style.display = 'none';
+  document.getElementById('thankYouState').classList.add('active');
+}
+
+function switchScreen(id) {
+  document.querySelectorAll('.app-screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.screen-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('appscreen-' + id).classList.add('active');
+  document.getElementById('sbtn-' + id).classList.add('active');
+  if (id === 'home') buildDemoGrid();
+}
+</script>
+</body>
+</html>
