@@ -1397,7 +1397,15 @@ function buildDemoGrid() {
   });
 }
 
-// ── SIGNUP ────────────────────────────────────────────────────
+// ── AUTO-TAB FROM URL PARAM ───────────────────────────────────
+window.addEventListener('load', () => {
+  const params = new URLSearchParams(window.location.search);
+  const tab = params.get('tab');
+  if (tab && document.getElementById(tab)) {
+    showSection(tab);
+  }
+});
+
 let selectedRole = null;
 
 function selectRole(role) {
