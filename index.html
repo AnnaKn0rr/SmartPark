@@ -1397,12 +1397,11 @@ function buildDemoGrid() {
   });
 }
 
-// ── AUTO-TAB FROM URL PARAM ───────────────────────────────────
+// ── AUTO-TAB FROM URL HASH ────────────────────────────────────
 window.addEventListener('load', () => {
-  const params = new URLSearchParams(window.location.search);
-  const tab = params.get('tab');
-  if (tab && document.getElementById(tab)) {
-    showSection(tab);
+  const hash = window.location.hash.replace('#', '');
+  if (hash && document.getElementById(hash)) {
+    showSection(hash);
   }
 });
 
