@@ -513,6 +513,9 @@
   .contact-band strong { color: var(--slate); }
 
   /* ── SIGNUP ── */
+  #signup {
+    --cyan: #1FD1F5;
+  }
   .signup-wrap {
     min-height: calc(100vh - 64px);
     display: flex; align-items: center; justify-content: center;
@@ -994,6 +997,54 @@
             </div>
           </div>
 
+          <!-- SCREEN: OPERATIONS -->
+          <div class="app-screen" id="appscreen-maintenance">
+            <div class="app-header">
+              <div class="app-logo">SmartPark</div>
+              <div class="app-user">Campus Activity</div>
+            </div>
+            <div class="app-rec" style="background:linear-gradient(135deg, rgba(0,119,168,0.18), rgba(127,119,221,0.1));border-color:rgba(0,119,168,0.3);">
+              <div class="app-rec-label" style="color:var(--cyan);">📍 Parking Services Active</div>
+              <div class="app-rec-lot">Lot A — North</div>
+              <div class="app-rec-sub">Routine rounds in progress · Zone status updates in real time</div>
+            </div>
+            <div style="background:var(--card);border-radius:10px;padding:1rem;margin-bottom:0.75rem;border:1px solid rgba(255,255,255,0.06);">
+              <div style="font-size:0.72rem;color:var(--dim);margin-bottom:0.6rem;text-transform:uppercase;letter-spacing:0.08em;">Zone Activity Overview</div>
+              <div style="display:flex;flex-direction:column;gap:0.55rem;">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <div>
+                    <div style="font-weight:600;font-size:0.85rem;">Lot B — East</div>
+                    <div style="font-size:0.72rem;color:var(--dim);">Est. rounds later today</div>
+                  </div>
+                  <div style="background:rgba(0,180,216,0.15);border:1px solid rgba(0,180,216,0.3);border-radius:20px;padding:0.25rem 0.7rem;font-size:0.72rem;color:var(--cyan);font-weight:600;">Active</div>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <div>
+                    <div style="font-weight:600;font-size:0.85rem;">Lot C — West</div>
+                    <div style="font-size:0.72rem;color:var(--dim);">No recent activity logged</div>
+                  </div>
+                  <div style="font-size:0.72rem;color:var(--dim);">Quiet</div>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <div>
+                    <div style="font-weight:600;font-size:0.85rem;">Parking Deck 1</div>
+                    <div style="font-size:0.72rem;color:var(--dim);">No recent activity logged</div>
+                  </div>
+                  <div style="font-size:0.72rem;color:var(--dim);">Quiet</div>
+                </div>
+              </div>
+            </div>
+            <div style="background:rgba(2,195,154,0.1);border:1px solid rgba(2,195,154,0.25);border-radius:8px;padding:0.75rem;margin-bottom:0.75rem;">
+              <div style="font-size:0.72rem;color:var(--mint);font-weight:600;margin-bottom:0.2rem;">ℹ Reminder</div>
+              <div style="font-size:0.82rem;">Always double-check your permit and zone before parking — SmartPark shows availability, not permission to park.</div>
+            </div>
+            <div class="app-info-row">
+              <div class="app-info-chip"><div class="chip-val cv-open">1</div><div class="chip-lbl">Zones active</div></div>
+              <div class="app-info-chip"><div class="chip-val cv-time">Live</div><div class="chip-lbl">Data feed</div></div>
+              <div class="app-info-chip"><div class="chip-val cv-walk">3</div><div class="chip-lbl">Zones tracked</div></div>
+            </div>
+          </div>
+
         </div>
         <div class="phone-nav">
           <button class="phone-nav-btn" onclick="prevScreen()">← Prev</button>
@@ -1032,6 +1083,13 @@
             <div>
               <div class="screen-btn-title">Smart Alerts</div>
               <div class="screen-btn-sub">Event warnings, busy alerts, spot reservations</div>
+            </div>
+          </button>
+          <button class="screen-btn" id="sbtn-maintenance" onclick="switchScreen('maintenance')">
+            <div class="screen-btn-icon" style="background:rgba(0,119,168,0.15);">📍</div>
+            <div>
+              <div class="screen-btn-title">Campus Activity</div>
+              <div class="screen-btn-sub">Zone-by-zone parking services activity</div>
             </div>
           </button>
         </div>
@@ -1280,8 +1338,8 @@
 
         <form class="signup-form" onsubmit="handleSignup(event)">
           <div>
-            <label for="sig-name">Your name</label>
-            <input id="sig-name" type="text" placeholder="First and last name" required>
+            <label for="sig-name">Your name (optional)</label>
+            <input id="sig-name" type="text" placeholder="First and last name">
           </div>
           <div>
             <label for="sig-email">Campus email</label>
@@ -1466,7 +1524,7 @@ async function handleSignup(e) {
   const name  = document.getElementById('sig-name').value.trim();
   const email = document.getElementById('sig-email').value.trim();
   const role  = selectedRole || 'Not specified';
-  if (!name || !email) return;
+  if (!email) return;
 
   const btn = e.target.querySelector('.signup-submit');
   btn.textContent = 'Submitting…';
@@ -1491,8 +1549,8 @@ async function handleSignup(e) {
   document.getElementById('thankYouState').classList.add('active');
 }
 
-const SCREENS = ['home', 'schedule', 'map', 'alerts'];
-const SCREEN_LABELS = { home: 'Home', schedule: 'Schedule AI', map: 'Lot Map', alerts: 'Alerts' };
+const SCREENS = ['home', 'schedule', 'map', 'alerts', 'maintenance'];
+const SCREEN_LABELS = { home: 'Home', schedule: 'Schedule AI', map: 'Lot Map', alerts: 'Alerts', maintenance: 'Campus Activity' };
 let currentScreenIdx = 0;
 
 function switchScreen(id) {
