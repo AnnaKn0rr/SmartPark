@@ -520,6 +520,63 @@
     50% { box-shadow: 0 0 26px rgba(0,180,216,0.55); }
   }
 
+  /* ── COMPLAINTS / VENT WALL ── */
+  .vent-hero {
+    background: linear-gradient(135deg, rgba(224,92,58,0.15), rgba(224,92,58,0.05));
+    border: 1px solid rgba(224,92,58,0.3); border-radius: 16px;
+    padding: 2rem 2.5rem; margin-bottom: 2.5rem;
+  }
+  .vent-hero p { font-size: 1rem; color: var(--slate); line-height: 1.7; }
+  .vent-hero strong { color: var(--white); }
+
+  .vent-form-card {
+    background: var(--card); border-radius: 16px; padding: 2rem 2.5rem;
+    border: 1px solid rgba(255,255,255,0.06); max-width: 640px;
+    margin: 0 auto 2rem;
+  }
+  .vent-form { display: flex; flex-direction: column; gap: 1rem; }
+  .vent-form label {
+    font-size: 0.8rem; font-weight: 600; color: var(--slate);
+    letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 0.3rem;
+    display: block;
+  }
+  .vent-form textarea {
+    width: 100%; background: var(--mid); border: 1.5px solid rgba(255,255,255,0.08);
+    border-radius: 10px; padding: 0.85rem 1rem;
+    font-family: 'Inter', sans-serif; font-size: 0.95rem; color: var(--white);
+    outline: none; transition: border-color 0.2s; resize: vertical;
+    min-height: 120px; line-height: 1.5;
+  }
+  .vent-form input {
+    width: 100%; background: var(--mid); border: 1.5px solid rgba(255,255,255,0.08);
+    border-radius: 10px; padding: 0.85rem 1rem;
+    font-family: 'Inter', sans-serif; font-size: 0.95rem; color: var(--white);
+    outline: none; transition: border-color 0.2s;
+  }
+  .vent-form textarea::placeholder, .vent-form input::placeholder { color: var(--dim); }
+  .vent-form textarea:focus, .vent-form input:focus { border-color: var(--coral); }
+  .vent-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; }
+  .vent-submit {
+    width: 100%; background: var(--coral); color: var(--white);
+    font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 1rem;
+    padding: 0.9rem; border-radius: 10px; border: none; cursor: pointer;
+    margin-top: 0.25rem; transition: background 0.2s, transform 0.15s;
+  }
+  .vent-submit:hover { background: #f0714f; transform: translateY(-1px); }
+  .vent-note { font-size: 0.78rem; color: var(--dim); margin-top: 0.5rem; text-align: center; }
+
+  .vent-thankyou {
+    display: none; flex-direction: column; align-items: center;
+    text-align: center; padding: 1rem 0;
+  }
+  .vent-thankyou.active { display: flex; }
+  .vent-thankyou-icon { font-size: 3rem; margin-bottom: 1rem; }
+  .vent-thankyou-title {
+    font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem;
+    font-weight: 700; margin-bottom: 0.6rem; color: var(--coral);
+  }
+  .vent-thankyou-msg { font-size: 0.92rem; color: var(--slate); line-height: 1.6; max-width: 380px; }
+
   /* ── SIGNUP ── */
   #signup {
     --cyan: #1FD1F5;
@@ -648,6 +705,7 @@
     <li><button onclick="showSection('demo')" id="tab-demo">Demo</button></li>
     <li><button onclick="showSection('compare')" id="tab-compare">Why SmartPark</button></li>
     <li><button onclick="showSection('team')" id="tab-team">Team</button></li>
+    <li><button onclick="showSection('complaints')" id="tab-complaints">Parking Tales</button></li>
     <li><button onclick="showSection('signup')" id="tab-signup" style="color:var(--cyan);border:1.5px solid rgba(0,180,216,0.35);border-radius:6px;">Get Early Access</button></li>
   </ul>
 </nav>
@@ -666,6 +724,9 @@
       <div class="hero-cta">
         <button class="btn-primary" onclick="showSection('demo')">See the Demo</button>
         <button class="btn-outline" onclick="showSection('problem')">The Problem</button>
+      </div>
+      <div style="margin-top:1.25rem;">
+        <a href="#" onclick="showSection('complaints');return false;" style="color:var(--dim);font-size:0.85rem;text-decoration:underline;text-underline-offset:3px;">Have a parking horror story? Share it →</a>
       </div>
     </div>
 
@@ -1331,6 +1392,51 @@
   </div>
 </section>
 
+<!-- ══ COMPLAINTS / VENT WALL ═══════════════════════════════════════ -->
+<section id="complaints">
+  <div class="section-inner">
+    <div class="sec-eyebrow">Parking Tales</div>
+    <h2 class="sec-title">Have a parking horror story?</h2>
+    <p class="sec-lead">Tell us what happened. Late to class, a ticket in the wrong zone, circling for 40 minutes — we want to hear it. Your story helps us build a stronger case for SmartPark on your campus.</p>
+
+    <div class="vent-hero">
+      <p><strong>This isn't a survey. It's a place to vent.</strong> Whatever you've felt about parking on campus — frustration, anger, resignation — write it down. No question is too small and no rant is too long.</p>
+    </div>
+
+    <div class="vent-form-card">
+      <div id="ventFormState">
+        <form class="vent-form" onsubmit="handleVent(event)">
+          <div>
+            <label for="vent-message">Your story / complaint</label>
+            <textarea id="vent-message" placeholder="Tell us what happened..." required></textarea>
+          </div>
+          <div class="vent-row">
+            <div>
+              <label for="vent-name">Name (optional)</label>
+              <input id="vent-name" type="text" placeholder="First and last name">
+            </div>
+            <div>
+              <label for="vent-email">Email (optional)</label>
+              <input id="vent-email" type="email" placeholder="you@university.edu">
+            </div>
+          </div>
+          <button type="submit" class="vent-submit">Submit my story →</button>
+          <p class="vent-note">Your story may be shared anonymously to help illustrate the parking problem. No email or name required.</p>
+        </form>
+      </div>
+
+      <div class="vent-thankyou" id="ventThankYouState">
+        <div class="vent-thankyou-icon">💬</div>
+        <div class="vent-thankyou-title">Thanks for sharing.</div>
+        <p class="vent-thankyou-msg">
+          We heard you. Every story like yours helps us make the case for SmartPark on campus.
+        </p>
+        <button class="thankyou-back" onclick="showSection('home')" style="margin-top:1.5rem;">Back to SmartPark →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ══ SIGNUP ═════════════════════════════════════════════════════ -->
 <section id="signup">
   <div class="signup-wrap">
@@ -1344,7 +1450,7 @@
           Help us bring SmartPark to <em>your</em> campus.
         </p>
         <p class="signup-sub">
-          SmartPark shows you open spots in real time, <em>and</em> recommends the best lot. <br>Sign up below to help us bring the technology to <em>your</em> campus.
+          SmartPark shows you open spots in real time, <em>and</em> recommends the best lot to park in.<br>Sign up below to help us bring the technology to <em>your</em> campus.
         </p>
         <div class="signup-pills">
           <div class="signup-pill">✓ Real-time spot availability</div>
@@ -1376,6 +1482,10 @@
           <button type="submit" class="signup-submit">Count me in →</button>
           <p class="signup-note">By submitting, you agree to be counted as an interested student or faculty member for SmartPark. No spam, ever — we'll only reach out when SmartPark is ready at your campus.</p>
         </form>
+
+        <div style="text-align:center;margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid rgba(255,255,255,0.06);">
+          <a href="#" onclick="showSection('complaints');return false;" style="color:var(--dim);font-size:0.85rem;text-decoration:underline;text-underline-offset:3px;">Have a parking horror story? Share it →</a>
+        </div>
       </div>
 
       <!-- THANK YOU STATE -->
@@ -1568,6 +1678,37 @@ async function handleSignup(e) {
 
   document.getElementById('formState').style.display = 'none';
   document.getElementById('thankYouState').classList.add('active');
+}
+
+async function handleVent(e) {
+  e.preventDefault();
+  const message = document.getElementById('vent-message').value.trim();
+  const name    = document.getElementById('vent-name').value.trim();
+  const email   = document.getElementById('vent-email').value.trim();
+  if (!message) return;
+
+  const btn = e.target.querySelector('.vent-submit');
+  btn.textContent = 'Submitting…';
+  btn.disabled = true;
+
+  try {
+    const form = new FormData();
+    form.append('type', 'complaint');
+    form.append('message', message);
+    form.append('name', name);
+    form.append('email', email);
+
+    await fetch('https://script.google.com/macros/s/AKfycbwAaIuEwY6om1gcu8ow8GT-SgLonMa6HAa0yNeseRSZgFEu8O6lDjxwoW6humsCAtleLw/exec', {
+      method: 'POST',
+      mode: 'no-cors',
+      body: form
+    });
+  } catch (err) {
+    console.log('Fetch error (may still have submitted):', err);
+  }
+
+  document.getElementById('ventFormState').style.display = 'none';
+  document.getElementById('ventThankYouState').classList.add('active');
 }
 
 const SCREENS = ['home', 'schedule', 'map', 'alerts', 'maintenance'];
